@@ -16,7 +16,7 @@
 #SBATCH --mail-user=nmmz76@umsystem.edu
 
 module load python/3.12.1
-source venv/bin/activate
+source .venv/bin/activate
 
 cd $SLURM_SUBMIT_DIR
 mkdir -p logs
