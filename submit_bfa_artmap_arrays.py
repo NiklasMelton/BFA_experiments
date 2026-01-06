@@ -8,7 +8,7 @@ THROTTLE = 25
 
 def get_n_trials() -> int:
     # Change this to the correct script that prints N
-    out = subprocess.check_output(["python", "artmap_array.py", "--print_ntrials"], text=True)
+    out = subprocess.check_output(["python3", "run_artmap_parallel.py", "--print_ntrials"], text=True)
     return int(out.strip())
 
 def main():
