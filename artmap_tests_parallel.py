@@ -50,7 +50,7 @@ def _pin_threads_from_slurm() -> None:
 
 RANDOM_STATE_VALUES = [0, 1, 2, 3, 4]
 N_BITS_VALUES = [1, 4, 8, 16]
-RHO_VALUES = [0.0, 0.5, 0.7, 0.9]
+RHO_VALUES = [0.0, 0.25, 0.5, 0.75, 0.9]
 
 
 @dataclass(frozen=True)
