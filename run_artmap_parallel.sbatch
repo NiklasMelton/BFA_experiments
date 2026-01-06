@@ -7,7 +7,7 @@
 #SBATCH --mem=12G
 #SBATCH --time=24:00:00
 
-#SBATCH --array=1480
+#SBATCH --array=0-1480
 
 #SBATCH --output=logs/%x_%A_%a.out
 #SBATCH --error=logs/%x_%A_%a.err
