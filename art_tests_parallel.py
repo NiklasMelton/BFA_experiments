@@ -6,7 +6,7 @@ import argparse
 import warnings
 import traceback
 from dataclasses import dataclass
-from typing import Callable, Dict, Any, List, Tuple, Optional
+from typing import Callable, Dict, Any, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -18,13 +18,10 @@ from experiment_utils import (
     load_uci_via_api_stub,
     load_mnist,
     load_uci_har_zip,
-    run_binaryfuzzyartmap,
-    run_sgd_binary,
-    run_fuzzyartmap_binary,
-    run_art1map,
-    run_sgd_continuous,
-    run_fuzzyartmap_continuous,
-    run_multinomial_nb_binary,
+    run_binaryfuzzyart,
+    run_fuzzyart_binary,
+    run_art1,
+    run_fuzzyart_continuous,
 )
 
 # ----------------------------
@@ -86,16 +83,11 @@ def _build_datasets() -> List[DatasetSpec]:
 
 def _build_tests() -> List[TestSpec]:
     return [
-        TestSpec("FuzzyARTMAP_binary", run_fuzzyartmap_binary, depends_on_n_bits=True),
-        TestSpec("FuzzyARTMAP_continuous", run_fuzzyartmap_continuous, depends_on_n_bits=False),
+        TestSpec("FuzzyART_binary", run_fuzzyart_binary, depends_on_n_bits=True),
+        TestSpec("FuzzyART_continuous", run_fuzzyart_continuous, depends_on_n_bits=False),
 
-        TestSpec("BinaryFuzzyARTMAP", run_binaryfuzzyartmap, depends_on_n_bits=True),
-        TestSpec("ART1MAP", run_art1map, depends_on_n_bits=True),
-
-        TestSpec("MultinomialNB", run_multinomial_nb_binary, depends_on_n_bits=True),
-
-        TestSpec("SGDClassifier_binary", run_sgd_binary, depends_on_n_bits=True),
-        TestSpec("SGDClassifier_continuous", run_sgd_continuous, depends_on_n_bits=False),
+        TestSpec("BinaryFuzzyART", run_binaryfuzzyart, depends_on_n_bits=True),
+        TestSpec("ART1", run_art1, depends_on_n_bits=True),
     ]
 
 
@@ -210,7 +202,7 @@ def _write_part(out_dir: str, task_id: int, row: Dict[str, Any]) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out_dir", type=str, default="bfa_artmap_results_parts")
+    parser.add_argument("--out_dir", type=str, default="bfa_art_results_parts")
     parser.add_argument("--task_id", type=int, default=None,
                         help="Explicit task id. If omitted, uses SLURM_ARRAY_TASK_ID.")
     parser.add_argument("--print_ntrials", action="store_true",
