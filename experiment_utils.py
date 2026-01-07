@@ -435,22 +435,27 @@ def binarize_features_thermometer(data: np.ndarray, n_bits: int) -> np.ndarray:
     if n_bits <= 0:
         raise ValueError("n_bits must be a positive integer.")
 
-    n, m = data.shape
-    min_vals = data.min(axis=0)
-    max_vals = data.max(axis=0)
+    X = np.asarray(data, dtype=np.float32)
+    n, m = X.shape
 
+    min_vals = X.min(axis=0)
+    max_vals = X.max(axis=0)
     ranges = np.where(max_vals - min_vals > 0, max_vals - min_vals, 1.0)
-    normalized_data = (data - min_vals) / ranges
+
+    norm = (X - min_vals) / ranges
 
     if n_bits == 1:
-        return (normalized_data > 0.5).astype(np.uint8)
+        return (norm > 0.5).astype(np.uint8)
 
-    quantized_data = np.floor(normalized_data * n_bits).astype(int)
-    thermometer_encoded = np.zeros((n, m, n_bits), dtype=np.uint8)
-    for i in range(n_bits):
-        thermometer_encoded[:, :, i] = (quantized_data > i).astype(np.uint8)
+    q = np.floor(norm * n_bits).astype(np.uint16)
+    q = np.clip(q, 0, n_bits - 1)
 
-    return thermometer_encoded.reshape(n, m * n_bits)
+    out = np.empty((n, m * n_bits), dtype=np.bool)
+    for b in range(n_bits):
+        out[:, b*m:(b+1)*m] = (q > b)
+
+    return out
+
 
 
 def artmap_weight_size(W) -> int:
@@ -493,7 +498,7 @@ def memory_bits_sgd_classifier(sgd) -> int:
 
 
 def _as_nonnegative_counts(X: np.ndarray, eps: float = 0.0) -> np.ndarray:
-    X = np.asarray(X)
+    X = np.asarray(X, dtype=np.uint16)
     if np.any(X < 0):
         mins = X.min(axis=0, keepdims=True)
         X = X - mins + eps
@@ -517,8 +522,12 @@ def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
 
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin)
+    del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+    X_train = X_train.astype(np.uint8)
+    X_test = X_test.astype(np.uint8)
 
     t0 = perf_counter()
     cls.fit(X_train)
@@ -557,6 +566,7 @@ def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
     X_prep = cls.prepare_data(X)
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
 
     t0 = perf_counter()
     cls.fit(X_train)
@@ -594,8 +604,12 @@ def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     cls = BinaryFuzzyARTMAP(rho=rho)
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin)
+    del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+    X_train = X_train.astype(np.uint8)
+    X_test = X_test.astype(np.uint8)
 
     t0 = perf_counter()
     cls.fit(X_train)
@@ -637,8 +651,10 @@ def run_art1(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     cls = ART1MAP(rho=rho, L=1.0)
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin).astype(np.int16)
+    del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
 
     t0 = perf_counter()
     cls.fit(X_train)
@@ -680,8 +696,12 @@ def run_fuzzyartmap_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int
 
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin)
+    del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+    X_train = X_train.astype(np.uint8)
+    X_test = X_test.astype(np.uint8)
 
     t0 = perf_counter()
     cls.fit(X_train, y_train)
@@ -714,6 +734,7 @@ def run_fuzzyartmap_continuous(X: np.ndarray, y: np.ndarray, rho: float,
     X_prep = cls.prepare_data(X)
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
 
     t0 = perf_counter()
     cls.fit(X_train, y_train)
@@ -744,8 +765,12 @@ def run_binaryfuzzyartmap(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     cls = BinaryFuzzyARTMAP(rho=rho)
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin)
+    del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+    X_train = X_train.astype(np.uint8)
+    X_test = X_test.astype(np.uint8)
 
     t0 = perf_counter()
     cls.fit(X_train, y_train)
@@ -781,8 +806,11 @@ def run_art1map(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     cls = ART1MAP(rho=rho, L=1.0)
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin).astype(np.int16)
-
+    del X_bin
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+    X_train = X_train.astype(np.uint8)
+    X_test = X_test.astype(np.uint8)
 
     t0 = perf_counter()
     cls.fit(X_train, y_train)
@@ -815,8 +843,10 @@ def run_multinomial_nb_binary(X: np.ndarray, y: np.ndarray, n_bits: int,
 
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = _as_nonnegative_counts(X_bin)
+    del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
 
     t0 = perf_counter()
     cls.fit(X_train, y_train)
@@ -846,6 +876,9 @@ def run_sgd_binary(X: np.ndarray, y: np.ndarray, n_bits: int, random_state: int,
 
     X_prep = binarize_features_thermometer(X, n_bits)
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+    X_train = X_train.astype(np.uint8)
+    X_test = X_test.astype(np.uint8)
     classes = np.unique(y_train)
 
     t0 = perf_counter()
@@ -879,6 +912,7 @@ def run_sgd_continuous(X: np.ndarray, y: np.ndarray, random_state: int,
     X_norm = (X - X_min) / (X_max - X_min + 1e-12)
 
     X_train, X_test, y_train, y_test = split_data(X_norm, y, random_state=random_state)
+    del X_norm
     classes = np.unique(y_train)
 
     t0 = perf_counter()
