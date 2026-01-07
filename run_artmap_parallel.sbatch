@@ -8,8 +8,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --constraint=skylake&40CPU
 
-#SBATCH --output=%x_%A_%a.out
-#SBATCH --error=%x_%A_%a.err
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
 
 #SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE
 #SBATCH --mail-user=nmmz76@umsystem.edu
