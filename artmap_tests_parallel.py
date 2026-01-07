@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import argparse
 import warnings
 import traceback
 from dataclasses import dataclass
-from typing import Callable, Dict, Any, List, Tuple, Optional
+from typing import Callable, Dict, Any, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -74,8 +75,13 @@ def _build_datasets() -> List[DatasetSpec]:
     IMPORTANT: avoid anonymous lambdas in the trial identity.
     Keep a stable dataset_name for reproducible indexing.
     """
+    pkg_dir = Path(__file__).resolve().parent  # /home/nmmz76/BFA_experiments/BFA_experiments
+    uci_zip = pkg_dir / "UCI HAR Dataset.zip"
     return [
-        DatasetSpec(name="UCI_HAR_ZIP", loader=lambda: load_uci_har_zip("UCI HAR Dataset.zip")),
+        DatasetSpec(
+            name="UCI_HAR_ZIP",
+            loader=lambda p=str(uci_zip): load_uci_har_zip(p),
+        ),
         DatasetSpec(name="UCI_94_Spambase", loader=lambda: load_uci_via_api_stub(94, "Spambase")),
         DatasetSpec(name="UCI_81_PenDigits", loader=lambda: load_uci_via_api_stub(81, "pendigits")),
         DatasetSpec(name="MNIST", loader=load_mnist),
