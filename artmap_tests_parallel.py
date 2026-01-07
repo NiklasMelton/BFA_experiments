@@ -182,10 +182,6 @@ def run_one_trial(
     }
 
     try:
-        X_tr, X_te, y_tr, y_te = split_data(X, y, random_state=int(trial.random_state))
-        row["n_train"] = int(len(y_tr))
-        row["n_test"] = int(len(y_te))
-
         with suppress_stdout_stderr(), warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",

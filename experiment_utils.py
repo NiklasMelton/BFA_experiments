@@ -11,7 +11,9 @@ import cv2
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import (
+    accuracy_score, adjusted_rand_score, adjusted_mutual_info_score
+)
 from scipy import sparse
 
 from sklearn.datasets import fetch_lfw_people
@@ -19,6 +21,10 @@ from insightface.app import FaceAnalysis
 
 from artlib import FuzzyARTMAP, BinaryFuzzyARTMAP
 from artlib.optimized.backends.cpp.ART1MAP import ART1MAP
+from artlib.optimized.backends.cpp.FuzzyART import FuzzyART
+from artlib.optimized.backends.cpp.BinaryFuzzyART import BinaryFuzzyART
+from artlib.optimized.backends.cpp.ART1 import ART1
+
 
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
@@ -394,15 +400,35 @@ def load_mnist() -> DatasetBundle:
 # Shared utilities
 # ----------------------------
 
-def split_data(X: np.ndarray, y: np.ndarray, random_state: int) -> Tuple[np.ndarray,
-                                                                 np.ndarray, np.ndarray, np.ndarray]:
-    return train_test_split(
+def _class_order_within_shuffle(X, y, rng, class_order=None):
+    y = np.asarray(y)
+    classes = np.unique(y) if class_order is None else np.asarray(class_order)
+
+    idx_out = []
+    for c in classes:
+        idx_c = np.flatnonzero(y == c)
+        rng.shuffle(idx_c)              # random within class
+        idx_out.append(idx_c)
+
+    idx_out = np.concatenate(idx_out)
+    return X[idx_out], y[idx_out]
+
+def split_data(X: np.ndarray, y: np.ndarray, random_state: int
+              ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    X_train, X_test, y_train, y_test = train_test_split(
         X, y,
         test_size=0.5,
         random_state=random_state,
         stratify=y,
         shuffle=True,
     )
+
+    rng = np.random.default_rng(random_state)
+    X_train, y_train = _class_order_within_shuffle(X_train, y_train, rng)
+    X_test,  y_test  = _class_order_within_shuffle(X_test,  y_test,  rng)
+
+    return X_train, X_test, y_train, y_test
+
 
 
 def binarize_features_thermometer(data: np.ndarray, n_bits: int) -> np.ndarray:
@@ -481,9 +507,171 @@ def safe_save_csv(df: pd.DataFrame, path: str, temp_path: str) -> None:
     df.to_csv(temp_path, index=False)
     os.replace(temp_path, path)
 
+# ----------------------------
+# Test ART functions (return dicts)
+# ----------------------------
+
+def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
+                           random_state: int, **kwargs) -> Dict[str, Any]:
+    cls = FuzzyARTMAP(rho=rho, alpha=1e-10, beta=1.0)
+
+    X_bin = binarize_features_thermometer(X, n_bits)
+    X_prep = cls.prepare_data(X_bin)
+
+    X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+
+    t0 = perf_counter()
+    cls.fit(X_train)
+    t1 = perf_counter()
+
+    p0 = perf_counter()
+    y_pred = cls.predict(X_test)
+    p1 = perf_counter()
+
+    ari_train = adjusted_rand_score(y_train, cls.labels_)
+    ami_train = adjusted_mutual_info_score(y_train, cls.labels_)
+    ari_test = adjusted_rand_score(y_test, y_pred)
+    ami_test = adjusted_mutual_info_score(y_test, y_pred)
+
+    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
+               np.ceil(np.log2(np.max(y))) * len(cls.map)
+
+    return {
+        "ari_train": float(ari_train),
+        "ami_train": float(ami_train),
+        "ari_test": float(ari_test),
+        "ami_test": float(ami_test),
+        "train_time_s": float(t1 - t0),
+        "pred_time_s": float(p1 - p0),
+        "n_clusters": int(cls.module_a.n_clusters),
+        "memory_bits": float(mem_bits),
+        "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
+    }
+
+
+def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
+                               random_state: int, **kwargs) -> Dict[str, Any]:
+    cls = FuzzyARTMAP(rho=rho, alpha=1e-10, beta=1.0)
+    X_prep = cls.prepare_data(X)
+
+    X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+
+    t0 = perf_counter()
+    cls.fit(X_train)
+    t1 = perf_counter()
+
+    p0 = perf_counter()
+    y_pred = cls.predict(X_test)
+    p1 = perf_counter()
+
+    ari_train = adjusted_rand_score(y_train, cls.labels_)
+    ami_train = adjusted_mutual_info_score(y_train, cls.labels_)
+    ari_test = adjusted_rand_score(y_test, y_pred)
+    ami_test = adjusted_mutual_info_score(y_test, y_pred)
+
+    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
+               np.ceil(np.log2(np.max(y))) * len(cls.map)
+
+    return {
+        "ari_train": float(ari_train),
+        "ami_train": float(ami_train),
+        "ari_test": float(ari_test),
+        "ami_test": float(ami_test),
+        "train_time_s": float(t1 - t0),
+        "pred_time_s": float(p1 - p0),
+        "n_clusters": int(cls.module_a.n_clusters),
+        "memory_bits": float(mem_bits),
+        "variant": "continuous",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
+    }
+
+
+def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
+                          random_state: int, **kwargs) -> Dict[str, Any]:
+    cls = BinaryFuzzyARTMAP(rho=rho)
+    X_bin = binarize_features_thermometer(X, n_bits)
+    X_prep = cls.prepare_data(X_bin)
+
+    X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+
+    t0 = perf_counter()
+    cls.fit(X_train)
+    t1 = perf_counter()
+
+    p0 = perf_counter()
+    y_pred = cls.predict(X_test)
+    p1 = perf_counter()
+
+    ari_train = adjusted_rand_score(y_train, cls.labels_)
+    ami_train = adjusted_mutual_info_score(y_train, cls.labels_)
+    ari_test = adjusted_rand_score(y_test, y_pred)
+    ami_test = adjusted_mutual_info_score(y_test, y_pred)
+
+    mem_bits = artmap_weight_size(cls.module_a.W) + \
+               np.ceil(np.log2(np.max(y))) * len(cls.map)
+    compressed_mem_bits = 2*np.ceil(np.log2(n_bits))*X.shape[1] + \
+               np.ceil(np.log2( np.max(y))) * len(cls.map)
+
+    mem_bits = min(mem_bits, compressed_mem_bits)
+
+    return {
+        "ari_train": float(ari_train),
+        "ami_train": float(ami_train),
+        "ari_test": float(ari_test),
+        "ami_test": float(ami_test),
+        "train_time_s": float(t1 - t0),
+        "pred_time_s": float(p1 - p0),
+        "n_clusters": int(cls.module_a.n_clusters),
+        "memory_bits": float(mem_bits),
+        "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
+    }
+
+
+def run_art1(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
+                random_state: int, **kwargs) -> Dict[str, Any]:
+    cls = ART1MAP(rho=rho, L=1.0)
+    X_bin = binarize_features_thermometer(X, n_bits)
+    X_prep = cls.prepare_data(X_bin).astype(np.int16)
+
+    X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+
+    t0 = perf_counter()
+    cls.fit(X_train)
+    t1 = perf_counter()
+
+    p0 = perf_counter()
+    y_pred = cls.predict(X_test)
+    p1 = perf_counter()
+
+    ari_train = adjusted_rand_score(y_train, cls.labels_)
+    ami_train = adjusted_mutual_info_score(y_train, cls.labels_)
+    ari_test = adjusted_rand_score(y_test, y_pred)
+    ami_test = adjusted_mutual_info_score(y_test, y_pred)
+
+    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
+               np.ceil(np.log2(np.max(y))) * len(cls.map)
+
+    return {
+        "ari_train": float(ari_train),
+        "ami_train": float(ami_train),
+        "ari_test": float(ari_test),
+        "ami_test": float(ami_test),
+        "train_time_s": float(t1 - t0),
+        "pred_time_s": float(p1 - p0),
+        "n_clusters": int(cls.module_a.n_clusters),
+        "memory_bits": float(mem_bits),
+        "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
+    }
 
 # ----------------------------
-# Test functions (return dicts)
+# Test ARTMAP functions (return dicts)
 # ----------------------------
 
 def run_fuzzyartmap_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
@@ -515,6 +703,8 @@ def run_fuzzyartmap_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int
         "n_clusters": int(cls.module_a.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
@@ -544,6 +734,8 @@ def run_fuzzyartmap_continuous(X: np.ndarray, y: np.ndarray, rho: float,
         "n_clusters": int(cls.module_a.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "continuous",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
@@ -579,6 +771,8 @@ def run_binaryfuzzyartmap(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
         "n_clusters": int(cls.module_a.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
@@ -609,6 +803,8 @@ def run_art1map(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
         "n_clusters": int(cls.module_a.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
@@ -638,6 +834,8 @@ def run_multinomial_nb_binary(X: np.ndarray, y: np.ndarray, n_bits: int,
         "pred_time_s": float(p1 - p0),
         "memory_bits": float(memory_bits_multinomial_nb(cls)),
         "variant": "binary",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
@@ -666,6 +864,8 @@ def run_sgd_binary(X: np.ndarray, y: np.ndarray, n_bits: int, random_state: int,
         "pred_time_s": float(p1 - p0),
         "memory_bits": float(memory_bits_sgd_classifier(cls)),
         "variant": f"binary(loss={loss})",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
@@ -697,6 +897,8 @@ def run_sgd_continuous(X: np.ndarray, y: np.ndarray, random_state: int,
         "pred_time_s": float(p1 - p0),
         "memory_bits": float(memory_bits_sgd_classifier(cls)),
         "variant": f"continuous(loss={loss})",
+        "n_train": int(len(y_train)),
+        "n_test": int(len(y_test))
     }
 
 
