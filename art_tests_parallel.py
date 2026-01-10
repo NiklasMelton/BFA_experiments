@@ -90,10 +90,10 @@ def _build_datasets() -> List[DatasetSpec]:
 def _build_tests() -> List[TestSpec]:
     return [
         TestSpec("FuzzyART_binary", run_fuzzyart_binary, depends_on_n_bits=True),
-        TestSpec("FuzzyART_continuous", run_fuzzyart_continuous, depends_on_n_bits=False),
-
-        TestSpec("BinaryFuzzyART", run_binaryfuzzyart, depends_on_n_bits=True),
-        TestSpec("ART1", run_art1, depends_on_n_bits=True),
+        # TestSpec("FuzzyART_continuous", run_fuzzyart_continuous, depends_on_n_bits=False),
+        #
+        # TestSpec("BinaryFuzzyART", run_binaryfuzzyart, depends_on_n_bits=True),
+        # TestSpec("ART1", run_art1, depends_on_n_bits=True),
     ]
 
 

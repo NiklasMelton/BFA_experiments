@@ -85,7 +85,6 @@ def _build_datasets() -> List[DatasetSpec]:
         DatasetSpec(name="UCI_94_Spambase", loader=lambda: load_uci_via_api_stub(94, "Spambase")),
         DatasetSpec(name="UCI_81_PenDigits", loader=lambda: load_uci_via_api_stub(81, "pendigits")),
         DatasetSpec(name="MNIST", loader=load_mnist),
-        # If you want this later, add it with a stable name:
         # DatasetSpec(name="LFW_RetinaFace", loader=lambda: load_retinaface_lfw_dataset(0)),
     ]
 
