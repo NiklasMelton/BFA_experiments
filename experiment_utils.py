@@ -695,7 +695,8 @@ def run_fuzzyartmap_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int
     cls = FuzzyARTMAP(rho=rho, alpha=1e-10, beta=1.0)
 
     X_bin = binarize_features_thermometer(X, n_bits).astype(np.int8)
-    X_prep = cls.prepare_data(X_bin)
+    # testing
+    X_prep = cls.prepare_data(X_bin.astype(np.int8))
     del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
