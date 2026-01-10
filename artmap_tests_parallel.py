@@ -93,15 +93,15 @@ def _build_datasets() -> List[DatasetSpec]:
 def _build_tests() -> List[TestSpec]:
     return [
         TestSpec("FuzzyARTMAP_binary", run_fuzzyartmap_binary, depends_on_n_bits=True),
-        TestSpec("FuzzyARTMAP_continuous", run_fuzzyartmap_continuous, depends_on_n_bits=False),
-
-        TestSpec("BinaryFuzzyARTMAP", run_binaryfuzzyartmap, depends_on_n_bits=True),
-        TestSpec("ART1MAP", run_art1map, depends_on_n_bits=True),
-
-        TestSpec("MultinomialNB", run_multinomial_nb_binary, depends_on_n_bits=True),
-
-        TestSpec("SGDClassifier_binary", run_sgd_binary, depends_on_n_bits=True),
-        TestSpec("SGDClassifier_continuous", run_sgd_continuous, depends_on_n_bits=False),
+        # TestSpec("FuzzyARTMAP_continuous", run_fuzzyartmap_continuous, depends_on_n_bits=False),
+        #
+        # TestSpec("BinaryFuzzyARTMAP", run_binaryfuzzyartmap, depends_on_n_bits=True),
+        # TestSpec("ART1MAP", run_art1map, depends_on_n_bits=True),
+        #
+        # TestSpec("MultinomialNB", run_multinomial_nb_binary, depends_on_n_bits=True),
+        #
+        # TestSpec("SGDClassifier_binary", run_sgd_binary, depends_on_n_bits=True),
+        # TestSpec("SGDClassifier_continuous", run_sgd_continuous, depends_on_n_bits=False),
     ]
 
 
@@ -203,6 +203,7 @@ def run_one_trial(
         row["status"] = "error"
         row["error"] = repr(e)
         row["traceback"] = traceback.format_exc()
+        raise e
 
     return row
 
