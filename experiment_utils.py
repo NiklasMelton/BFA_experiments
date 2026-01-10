@@ -518,16 +518,16 @@ def safe_save_csv(df: pd.DataFrame, path: str, temp_path: str) -> None:
 
 def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
                            random_state: int, **kwargs) -> Dict[str, Any]:
-    cls = FuzzyARTMAP(rho=rho, alpha=1e-10, beta=1.0)
+    cls = FuzzyART(rho=rho, alpha=1e-10, beta=1.0)
 
     X_bin = binarize_features_thermometer(X, n_bits)
-    X_prep = cls.prepare_data(X_bin)
+    X_prep = cls.prepare_data(X_bin.astype(np.int8))
     del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
     del X_prep
-    X_train = X_train.astype(np.uint8)
-    X_test = X_test.astype(np.uint8)
+    X_train = X_train.astype(np.float32)
+    X_test = X_test.astype(np.float32)
 
     t0 = perf_counter()
     cls.fit(X_train)
@@ -562,7 +562,7 @@ def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
 
 def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
                                random_state: int, **kwargs) -> Dict[str, Any]:
-    cls = FuzzyARTMAP(rho=rho, alpha=1e-10, beta=1.0)
+    cls = FuzzyART(rho=rho, alpha=1e-10, beta=1.0)
     X_prep = cls.prepare_data(X)
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
@@ -601,7 +601,7 @@ def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
 
 def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
                           random_state: int, **kwargs) -> Dict[str, Any]:
-    cls = BinaryFuzzyARTMAP(rho=rho)
+    cls = BinaryFuzzyART(rho=rho)
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin)
     del X_bin
@@ -648,7 +648,7 @@ def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
 
 def run_art1(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
                 random_state: int, **kwargs) -> Dict[str, Any]:
-    cls = ART1MAP(rho=rho, L=1.0)
+    cls = ART1(rho=rho, L=1.0)
     X_bin = binarize_features_thermometer(X, n_bits)
     X_prep = cls.prepare_data(X_bin).astype(np.int16)
     del X_bin
@@ -694,14 +694,14 @@ def run_fuzzyartmap_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int
                            random_state: int, **kwargs) -> Dict[str, Any]:
     cls = FuzzyARTMAP(rho=rho, alpha=1e-10, beta=1.0)
 
-    X_bin = binarize_features_thermometer(X, n_bits)
+    X_bin = binarize_features_thermometer(X, n_bits).astype(np.int8)
     X_prep = cls.prepare_data(X_bin)
     del X_bin
 
     X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
     del X_prep
-    X_train = X_train.astype(np.uint8)
-    X_test = X_test.astype(np.uint8)
+    X_train = X_train.astype(np.float32)
+    X_test = X_test.astype(np.float32)
 
     t0 = perf_counter()
     cls.fit(X_train, y_train)
