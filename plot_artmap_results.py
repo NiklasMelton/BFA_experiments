@@ -5,6 +5,12 @@ import matplotlib.pyplot as plt
 
 def load_and_aggregate_data():
     df = pd.read_csv("bfa_artmap_results.csv")
+    errors = df["error"].unique()
+    print("Errors detected")
+    print(errors)
+    print("Filtering results")
+    df = df[df["error"].isna()]
+
 
     group_cols = ["dataset", "model", "rho", "n_bits", "variant"]
 
@@ -27,6 +33,7 @@ def load_and_aggregate_data():
     ]
 
     summary = summary.reset_index()
+
     return summary
 
 
@@ -98,6 +105,7 @@ def plot_accuracy_vs_fit_time(df):
         ax.set_title(str(dataset))
         ax.set_xlabel("train_time_s (mean)")
         ax.set_ylabel("accuracy (mean)")
+        ax.set_xscale("log")
         ax.grid(True, alpha=0.3)
 
     # If fewer than 4 datasets, hide unused axes (but keep the 2x2 figure)
