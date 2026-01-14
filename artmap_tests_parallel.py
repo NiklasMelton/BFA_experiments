@@ -78,13 +78,13 @@ def _build_datasets() -> List[DatasetSpec]:
     pkg_dir = Path(__file__).resolve().parent  # /home/nmmz76/BFA_experiments/BFA_experiments
     uci_zip = pkg_dir / "UCI HAR Dataset.zip"
     return [
-        # DatasetSpec(
-        #     name="UCI_HAR_ZIP",
-        #     loader=lambda p=str(uci_zip): load_uci_har_zip(p),
-        # ),
+        DatasetSpec(
+            name="UCI_HAR_ZIP",
+            loader=lambda p=str(uci_zip): load_uci_har_zip(p),
+        ),
         DatasetSpec(name="UCI_94_Spambase", loader=lambda: load_uci_via_api_stub(94, "Spambase")),
         DatasetSpec(name="UCI_81_PenDigits", loader=lambda: load_uci_via_api_stub(81, "pendigits")),
-        # DatasetSpec(name="MNIST", loader=load_mnist),
+        DatasetSpec(name="MNIST", loader=load_mnist),
         # DatasetSpec(name="LFW_RetinaFace", loader=lambda: load_retinaface_lfw_dataset(0)),
     ]
 
@@ -92,15 +92,15 @@ def _build_datasets() -> List[DatasetSpec]:
 def _build_tests() -> List[TestSpec]:
     return [
         TestSpec("FuzzyARTMAP_binary", run_fuzzyartmap_binary, depends_on_n_bits=True),
-        # TestSpec("FuzzyARTMAP_continuous", run_fuzzyartmap_continuous, depends_on_n_bits=False),
-        #
-        # TestSpec("BinaryFuzzyARTMAP", run_binaryfuzzyartmap, depends_on_n_bits=True),
-        # TestSpec("ART1MAP", run_art1map, depends_on_n_bits=True),
-        #
-        # TestSpec("MultinomialNB", run_multinomial_nb_binary, depends_on_n_bits=True),
-        #
-        # TestSpec("SGDClassifier_binary", run_sgd_binary, depends_on_n_bits=True),
-        # TestSpec("SGDClassifier_continuous", run_sgd_continuous, depends_on_n_bits=False),
+        TestSpec("FuzzyARTMAP_continuous", run_fuzzyartmap_continuous, depends_on_n_bits=False),
+
+        TestSpec("BinaryFuzzyARTMAP", run_binaryfuzzyartmap, depends_on_n_bits=True),
+        TestSpec("ART1MAP", run_art1map, depends_on_n_bits=True),
+
+        TestSpec("MultinomialNB", run_multinomial_nb_binary, depends_on_n_bits=True),
+
+        TestSpec("SGDClassifier_binary", run_sgd_binary, depends_on_n_bits=True),
+        TestSpec("SGDClassifier_continuous", run_sgd_continuous, depends_on_n_bits=False),
     ]
 
 
