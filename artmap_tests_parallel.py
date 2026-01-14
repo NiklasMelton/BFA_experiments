@@ -78,13 +78,13 @@ def _build_datasets() -> List[DatasetSpec]:
     pkg_dir = Path(__file__).resolve().parent  # /home/nmmz76/BFA_experiments/BFA_experiments
     uci_zip = pkg_dir / "UCI HAR Dataset.zip"
     return [
-        DatasetSpec(
-            name="UCI_HAR_ZIP",
-            loader=lambda p=str(uci_zip): load_uci_har_zip(p),
-        ),
+        # DatasetSpec(
+        #     name="UCI_HAR_ZIP",
+        #     loader=lambda p=str(uci_zip): load_uci_har_zip(p),
+        # ),
         DatasetSpec(name="UCI_94_Spambase", loader=lambda: load_uci_via_api_stub(94, "Spambase")),
         DatasetSpec(name="UCI_81_PenDigits", loader=lambda: load_uci_via_api_stub(81, "pendigits")),
-        DatasetSpec(name="MNIST", loader=load_mnist),
+        # DatasetSpec(name="MNIST", loader=load_mnist),
         # DatasetSpec(name="LFW_RetinaFace", loader=lambda: load_retinaface_lfw_dataset(0)),
     ]
 
