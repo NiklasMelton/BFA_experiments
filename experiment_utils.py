@@ -543,7 +543,7 @@ def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
     mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
         "ari_train": float(ari_train),
@@ -582,7 +582,7 @@ def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
     mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
         "ari_train": float(ari_train),
@@ -625,9 +625,9 @@ def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
     mem_bits = artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
-    compressed_mem_bits = 2*np.ceil(np.log2(n_bits))*X.shape[1] + \
-               np.ceil(np.log2( np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
+    compressed_mem_bits = 2*np.ceil(np.log2(n_bits)+1)*X.shape[1] + \
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     mem_bits = min(mem_bits, compressed_mem_bits)
 
@@ -670,7 +670,7 @@ def run_art1(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
     mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
         "ari_train": float(ari_train),
@@ -715,7 +715,7 @@ def run_fuzzyartmap_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int
     acc = accuracy_score(y_test, y_pred)
 
     mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
         "accuracy": float(acc),
@@ -747,7 +747,7 @@ def run_fuzzyartmap_continuous(X: np.ndarray, y: np.ndarray, rho: float,
 
     acc = accuracy_score(y_test, y_pred)
     mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
         "accuracy": float(acc),
@@ -784,9 +784,9 @@ def run_binaryfuzzyartmap(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     acc = accuracy_score(y_test, y_pred)
 
     mem_bits = artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
-    compressed_mem_bits = 2*np.ceil(np.log2(n_bits))*X.shape[1] + \
-               np.ceil(np.log2( np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
+    compressed_mem_bits = 2*np.ceil(np.log2(n_bits+1))*X.shape[1] + \
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     mem_bits = min(mem_bits, compressed_mem_bits)
 
@@ -823,7 +823,7 @@ def run_art1map(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
 
     acc = accuracy_score(y_test, y_pred)
     mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-               np.ceil(np.log2(np.max(y))) * len(cls.map)
+               np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
         "accuracy": float(acc),
