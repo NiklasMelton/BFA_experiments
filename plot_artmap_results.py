@@ -185,8 +185,8 @@ def plot_accuracy_vs_fit_time(df, n_bits_left=1, n_bits_right=16):
         }
         dataset_title = title_map[str(dataset)]
         ax.set_title(f"{dataset_title} | n_bits={bits_value}")
-        ax.set_xlabel("train_time_s (mean)")
-        ax.set_ylabel("accuracy (mean)")
+        ax.set_xlabel("Fit Time (secs)")
+        ax.set_ylabel("Accuracy")
         ax.set_xscale("log")
         ax.set_xlim([1e-3, 1e4])
         ax.set_ylim([0, 1])
@@ -229,6 +229,131 @@ def plot_accuracy_vs_fit_time(df, n_bits_left=1, n_bits_right=16):
     plt.subplots_adjust(bottom=0.25)
     return fig, axes
 
+
+
+def plot_accuracy_vs_predict_time(df, n_bits_left=1, n_bits_right=16):
+    """
+    2x4 grid (4 datasets):
+      - Columns 0-1: dataset panels for n_bits = n_bits_left
+      - Columns 2-3: dataset panels for n_bits = n_bits_right
+    Within each panel:
+      x = train_time_s_mean, y = accuracy_mean
+      color = (model, variant) pair
+      marker = rho
+      points only (no connecting lines).
+    """
+    required = {"dataset", "model", "variant", "rho", "n_bits", "accuracy_mean",
+                "pred_time_s_mean", "n_test_first"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"df is missing required columns: {sorted(missing)}")
+
+    # pick up to 4 datasets
+    datasets = list(pd.unique(df["dataset"]))[:4]
+
+    # aesthetics mappings computed once from full df (stable across panels)
+    mv_pairs = df[["model", "variant"]].drop_duplicates().apply(tuple, axis=1).tolist()
+    mv_pairs = sorted(mv_pairs)
+
+    mv_to_color = {mv: okabe_ito[i % len(okabe_ito)] for i, mv in enumerate(mv_pairs)}
+
+    rhos = sorted(pd.unique(df["rho"]))
+    marker_cycle = ["o", "s", "^", "D", "v", "P", "X", "*", "<", ">", "h", "H", "p", "8"]
+    rho_to_marker = {rho: marker_cycle[i % len(marker_cycle)] for i, rho in enumerate(rhos)}
+
+    # layout: 2 rows x 4 cols
+    fig, axes = plt.subplots(2, 4, figsize=(22, 9), sharex=False, sharey=False)
+
+    # map datasets to panel positions:
+    # (row 0,col 0) dataset0 left, (row 0,col 2) dataset0 right
+    # (row 0,col 1) dataset1 left, (row 0,col 3) dataset1 right
+    # (row 1,col 0) dataset2 left, (row 1,col 2) dataset2 right
+    # (row 1,col 1) dataset3 left, (row 1,col 3) dataset3 right
+    positions = [
+        (0, 0, 0), (0, 1, 1),
+        (1, 0, 2), (1, 1, 3),
+    ]  # (row, col_left_base, dataset_index)
+
+    handles_for_legend = {}
+
+    def _plot_panel(ax, dsub_bits, dataset, bits_value):
+        # points only; group only for labeling/consistent mapping
+        for (model, variant, rho), g in dsub_bits.groupby(["model", "variant", "rho"], dropna=False):
+            if g.empty:
+                continue
+            color = mv_to_color[(model, variant)]
+            model_clean = model.replace("_binary", "").replace("_continuous", "")
+            variant_clean = variant.replace("(loss=log_loss)", "")
+            label = f"{model_clean} | {variant_clean}"
+            if "ART" in model_clean:
+                label += f" | rho={rho}"
+                marker = rho_to_marker[rho]
+            else:
+                marker = "X"
+            pred_time_s_mean = g["pred_time_s_mean"].to_numpy()
+            pred_time_s_mean_per = pred_time_s_mean/g["n_test_first"]
+            sc = ax.scatter(
+                pred_time_s_mean_per,
+                g["accuracy_mean"].to_numpy(),
+                color=color,
+                marker=marker,
+                s=45 if "Binary" not in model_clean else 90,
+                alpha=0.9,
+                label=label,
+            )
+
+            handles_for_legend.setdefault(label, sc)
+        title_map = {
+            "mnist": "MNIST",
+            "uci_har": "HAR",
+            "pendigits": "Pendigits",
+            "Spambase": "Spambase"
+        }
+        dataset_title = title_map[str(dataset)]
+        ax.set_title(f"{dataset_title} | n_bits={bits_value}")
+        ax.set_xlabel("Per-Sample Predict Time (secs)")
+        ax.set_ylabel("Accuracy")
+        ax.set_xscale("log")
+        # ax.set_xlim([1e-3, 1e4])
+        ax.set_ylim([0, 1])
+        ax.grid(True, alpha=0.3)
+
+    # plot each dataset in left/right panels
+    for row, col_left, di in positions:
+        if di >= len(datasets):
+            # hide both panels if dataset missing
+            axes[row, col_left].axis("off")
+            axes[row, col_left + 2].axis("off")
+            continue
+
+        dataset = datasets[di]
+        dsub = df[df["dataset"] == dataset].copy()
+
+        left = dsub[(dsub["n_bits"] == n_bits_left) | (dsub["n_bits"] == 0)]
+        right = dsub[(dsub["n_bits"] == n_bits_right) | (dsub["n_bits"] == 0)]
+
+        _plot_panel(axes[row, col_left], left, dataset, n_bits_left)
+        _plot_panel(axes[row, col_left + 2], right, dataset, n_bits_right)
+
+    # hide any unused panels if < 4 datasets (already handled above, but safe)
+    for r in range(2):
+        for c in range(4):
+            if not axes[r, c].has_data():
+                axes[r, c].axis("off")
+
+    # single figure legend
+    fig.legend(
+        handles_for_legend.values(),
+        handles_for_legend.keys(),
+        loc="lower center",
+        ncol=3,
+        bbox_to_anchor=(0.5, 0.0),
+        frameon=True,
+    )
+
+    fig.tight_layout()
+    plt.subplots_adjust(bottom=0.25)
+    return fig, axes
 
 def plot_accuracy_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
     """
@@ -314,8 +439,8 @@ def plot_accuracy_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
         dataset_title = title_map.get(str(dataset), str(dataset))
 
         ax.set_title(f"{dataset_title} | n_bits={bits_value}")
-        ax.set_xlabel("memory_bits (mean)")
-        ax.set_ylabel("accuracy (mean)")
+        ax.set_xlabel("Memory Bits")
+        ax.set_ylabel("Accuracy")
         ax.set_xscale("log")
         ax.set_ylim([0, 1])
         ax.grid(True, alpha=0.3)
@@ -350,7 +475,7 @@ def plot_accuracy_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
                 axes[r, c].axis("off")
 
     # legend + layout (keep legend inside canvas)
-    fig.subplots_adjust(bottom=0.25)
+    fig.subplots_adjust(bottom=0.2)
     fig.legend(
         handles_for_legend.values(),
         handles_for_legend.keys(),
@@ -360,17 +485,152 @@ def plot_accuracy_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
         frameon=True,
     )
 
-    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    fig.tight_layout(rect=[0, 0.15, 1, 1])
+    return fig, axes
+
+
+
+
+def plot_fit_time_vs_predict_time(df, n_bits_left=1, n_bits_right=16):
+    """
+    2x4 grid (4 datasets):
+      - Columns 0-1: dataset panels for n_bits = n_bits_left
+      - Columns 2-3: dataset panels for n_bits = n_bits_right
+    Within each panel:
+      x = train_time_s_mean, y = accuracy_mean
+      color = (model, variant) pair
+      marker = rho
+      points only (no connecting lines).
+    """
+    required = {"dataset", "model", "variant", "rho", "n_bits", "train_time_s_mean",
+                "pred_time_s_mean", "n_test_first"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"df is missing required columns: {sorted(missing)}")
+
+    # pick up to 4 datasets
+    datasets = list(pd.unique(df["dataset"]))[:4]
+
+    # aesthetics mappings computed once from full df (stable across panels)
+    mv_pairs = df[["model", "variant"]].drop_duplicates().apply(tuple, axis=1).tolist()
+    mv_pairs = sorted(mv_pairs)
+
+    mv_to_color = {mv: okabe_ito[i % len(okabe_ito)] for i, mv in enumerate(mv_pairs)}
+
+    rhos = sorted(pd.unique(df["rho"]))
+    marker_cycle = ["o", "s", "^", "D", "v", "P", "X", "*", "<", ">", "h", "H", "p", "8"]
+    rho_to_marker = {rho: marker_cycle[i % len(marker_cycle)] for i, rho in enumerate(rhos)}
+
+    # layout: 2 rows x 4 cols
+    fig, axes = plt.subplots(2, 4, figsize=(22, 9), sharex=False, sharey=False)
+
+    # map datasets to panel positions:
+    # (row 0,col 0) dataset0 left, (row 0,col 2) dataset0 right
+    # (row 0,col 1) dataset1 left, (row 0,col 3) dataset1 right
+    # (row 1,col 0) dataset2 left, (row 1,col 2) dataset2 right
+    # (row 1,col 1) dataset3 left, (row 1,col 3) dataset3 right
+    positions = [
+        (0, 0, 0), (0, 1, 1),
+        (1, 0, 2), (1, 1, 3),
+    ]  # (row, col_left_base, dataset_index)
+
+    handles_for_legend = {}
+
+    def _plot_panel(ax, dsub_bits, dataset, bits_value):
+        # points only; group only for labeling/consistent mapping
+        for (model, variant, rho), g in dsub_bits.groupby(["model", "variant", "rho"], dropna=False):
+            if g.empty:
+                continue
+            color = mv_to_color[(model, variant)]
+            model_clean = model.replace("_binary", "").replace("_continuous", "")
+            variant_clean = variant.replace("(loss=log_loss)", "")
+            label = f"{model_clean} | {variant_clean}"
+            if "ART" in model_clean:
+                label += f" | rho={rho}"
+                marker = rho_to_marker[rho]
+            else:
+                marker = "X"
+            pred_time_s_mean = g["pred_time_s_mean"].to_numpy()
+            pred_time_s_mean_per = pred_time_s_mean/g["n_test_first"]
+            sc = ax.scatter(
+                pred_time_s_mean_per,
+                g["train_time_s_mean"].to_numpy(),
+                color=color,
+                marker=marker,
+                s=45 if "Binary" not in model_clean else 90,
+                alpha=0.9,
+                label=label,
+            )
+
+            handles_for_legend.setdefault(label, sc)
+        title_map = {
+            "mnist": "MNIST",
+            "uci_har": "HAR",
+            "pendigits": "Pendigits",
+            "Spambase": "Spambase"
+        }
+        dataset_title = title_map[str(dataset)]
+        ax.set_title(f"{dataset_title} | n_bits={bits_value}")
+        ax.set_xlabel("Per-Sample Predict Time (secs)")
+        ax.set_ylabel("Train Time (secs)")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim([1e-7, 1])
+        ax.set_ylim([1e-3, 1e4])
+        ax.grid(True, alpha=0.3)
+
+    # plot each dataset in left/right panels
+    for row, col_left, di in positions:
+        if di >= len(datasets):
+            # hide both panels if dataset missing
+            axes[row, col_left].axis("off")
+            axes[row, col_left + 2].axis("off")
+            continue
+
+        dataset = datasets[di]
+        dsub = df[df["dataset"] == dataset].copy()
+
+        left = dsub[(dsub["n_bits"] == n_bits_left) | (dsub["n_bits"] == 0)]
+        right = dsub[(dsub["n_bits"] == n_bits_right) | (dsub["n_bits"] == 0)]
+
+        _plot_panel(axes[row, col_left], left, dataset, n_bits_left)
+        _plot_panel(axes[row, col_left + 2], right, dataset, n_bits_right)
+
+    # hide any unused panels if < 4 datasets (already handled above, but safe)
+    for r in range(2):
+        for c in range(4):
+            if not axes[r, c].has_data():
+                axes[r, c].axis("off")
+
+    # single figure legend
+    fig.legend(
+        handles_for_legend.values(),
+        handles_for_legend.keys(),
+        loc="lower center",
+        ncol=3,
+        bbox_to_anchor=(0.5, 0.0),
+        frameon=True,
+    )
+
+    fig.tight_layout()
+    plt.subplots_adjust(bottom=0.25)
     return fig, axes
 
 
 if __name__ == "__main__":
     df = load_and_aggregate_data()
     filt = df[(df["rho"] <= 0.1) | (df["rho"] > 0.8)]
+
     # fig, axes = plot_accuracy_vs_fit_time(filt, n_bits_left=1, n_bits_right=16)
     # fig.savefig("artmap_accuracy_vs_fit_time.png")
+    #
+    # fig, axes = plot_accuracy_vs_predict_time(filt, n_bits_left=1, n_bits_right=16)
+    # fig.savefig("artmap_accuracy_vs_pred_time.png")
 
     fig, axes = plot_accuracy_vs_memory_bits(filt, n_bits_left=1, n_bits_right=16)
     fig.savefig("artmap_accuracy_vs_mem_bits.png")
+
+    fig, axes = plot_fit_time_vs_predict_time(filt, n_bits_left=1, n_bits_right=16)
+    fig.savefig("artmap_fit_vs_pred_time.png")
 
     plt.show()
