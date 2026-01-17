@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+Spambase,UCI_94_Spambase,ART1MAP,3,4601,57,2,1,0.5,ucimlrepo,94,4601,57,2,0.6223381138635375,0.1593099379679188,0.3277531099738553,925,6748800.0,binary,2300,2301,ok,,

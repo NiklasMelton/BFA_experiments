@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+pendigits,UCI_81_PenDigits,FuzzyARTMAP_continuous,2,10992,16,10,0,0.0,ucimlrepo,81,10992,16,10,0.75891557496361,0.007446084055118263,0.00601172901224345,22,22616.0,continuous,5496,5496,ok,,

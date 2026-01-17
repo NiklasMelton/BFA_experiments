@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,memory_bits,variant,n_train,n_test,status,error,traceback
+pendigits,UCI_81_PenDigits,SGDClassifier_binary,2,10992,16,10,1,0.0,ucimlrepo,81,10992,16,10,0.6586608442503639,0.01640275400131941,0.0019178650109097362,11648.0,binary(loss=log_loss),5496,5496,ok,,

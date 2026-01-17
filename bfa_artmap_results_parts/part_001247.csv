@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+mnist,MNIST,ART1MAP,1,70000,784,10,8,0.9,MNIST,70000,784,10,0.9593714285714285,25786.935643878067,22307.609608518076,35000,28098700000.0,binary,35000,35000,ok,,

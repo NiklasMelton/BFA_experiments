@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+uci_har,UCI_HAR_ZIP,FuzzyARTMAP_binary,3,10299,561,6,16,0.75,zip,10299,561,6,0.8829126213592233,87.0051680499455,84.71084847708698,300,172340100.0,binary,5149,5150,ok,,

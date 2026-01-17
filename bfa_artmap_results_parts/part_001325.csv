@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,memory_bits,variant,n_train,n_test,status,error,traceback
+mnist,MNIST,MultinomialNB,2,70000,784,10,8,0.0,MNIST,70000,784,10,0.8261428571428572,13.354383742902428,0.5610187000129372,8029760.0,binary,35000,35000,ok,,

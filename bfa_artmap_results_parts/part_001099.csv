@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+pendigits,UCI_81_PenDigits,ART1MAP,4,10992,16,10,8,0.9,ucimlrepo,81,10992,16,10,0.9859898107714702,12.331787851057015,9.966742039076053,5496,90068448.0,binary,5496,5496,ok,,

@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+uci_har,UCI_HAR_ZIP,ART1MAP,1,10299,561,6,1,0.0,zip,10299,561,6,0.5302912621359224,0.18543566996231675,0.06522531399969012,7,502677.0,binary,5149,5150,ok,,

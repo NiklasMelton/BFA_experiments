@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,memory_bits,variant,n_train,n_test,status,error,traceback
+Spambase,UCI_94_Spambase,SGDClassifier_binary,4,4601,57,2,4,0.0,ucimlrepo,94,4601,57,2,0.5758365927857453,0.006176172057166696,0.0020657749846577644,14912.0,binary(loss=log_loss),2300,2301,ok,,

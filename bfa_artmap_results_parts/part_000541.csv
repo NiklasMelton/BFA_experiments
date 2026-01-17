@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+Spambase,UCI_94_Spambase,FuzzyARTMAP_continuous,2,4601,57,2,0,0.75,ucimlrepo,94,4601,57,2,0.8374619730551934,0.012607414973899722,0.009205622947774827,17,62016.0,continuous,2300,2301,ok,,

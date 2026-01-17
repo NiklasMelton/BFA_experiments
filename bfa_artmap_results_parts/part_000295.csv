@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,memory_bits,variant,n_train,n_test,status,error,traceback
+uci_har,UCI_HAR_ZIP,SGDClassifier_continuous,3,10299,561,6,0,0.0,zip,10299,561,6,0.8976699029126214,0.07134938496164978,0.008125075022689998,108416.0,continuous(loss=log_loss),5149,5150,ok,,

@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+mnist,MNIST,BinaryFuzzyARTMAP,3,70000,784,10,16,0.75,MNIST,70000,784,10,0.9209428571428572,866.7689460689435,1526.1068966430612,5297,27460.0,binary,35000,35000,ok,,

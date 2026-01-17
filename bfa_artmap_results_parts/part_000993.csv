@@ -1,0 +1,2 @@
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,accuracy,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+pendigits,UCI_81_PenDigits,BinaryFuzzyARTMAP,3,10992,16,10,8,0.25,ucimlrepo,81,10992,16,10,0.7023289665211062,0.01909889990929514,0.023064415901899338,37,244.0,binary,5496,5496,ok,,
