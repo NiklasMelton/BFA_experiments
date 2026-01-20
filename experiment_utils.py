@@ -542,7 +542,7 @@ def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     ari_test = adjusted_rand_score(y_test, y_pred)
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
-    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
+    mem_bits = 32 * artmap_weight_size(cls.W) + \
                np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
@@ -552,7 +552,7 @@ def run_fuzzyart_binary(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
         "ami_test": float(ami_test),
         "train_time_s": float(t1 - t0),
         "pred_time_s": float(p1 - p0),
-        "n_clusters": int(cls.module_a.n_clusters),
+        "n_clusters": int(cls.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "binary",
         "n_train": int(len(y_train)),
@@ -581,7 +581,7 @@ def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
     ari_test = adjusted_rand_score(y_test, y_pred)
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
-    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
+    mem_bits = 32 * artmap_weight_size(cls.W) + \
                np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
@@ -591,7 +591,7 @@ def run_fuzzyart_continuous(X: np.ndarray, y: np.ndarray, rho: float,
         "ami_test": float(ami_test),
         "train_time_s": float(t1 - t0),
         "pred_time_s": float(p1 - p0),
-        "n_clusters": int(cls.module_a.n_clusters),
+        "n_clusters": int(cls.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "continuous",
         "n_train": int(len(y_train)),
@@ -624,7 +624,7 @@ def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     ari_test = adjusted_rand_score(y_test, y_pred)
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
-    mem_bits = artmap_weight_size(cls.module_a.W) + \
+    mem_bits = artmap_weight_size(cls.W) + \
                np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
     compressed_mem_bits = 2*np.ceil(np.log2(n_bits)+1)*X.shape[1] + \
                np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
@@ -638,7 +638,7 @@ def run_binaryfuzzyart(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
         "ami_test": float(ami_test),
         "train_time_s": float(t1 - t0),
         "pred_time_s": float(p1 - p0),
-        "n_clusters": int(cls.module_a.n_clusters),
+        "n_clusters": int(cls.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "binary",
         "n_train": int(len(y_train)),
@@ -669,7 +669,7 @@ def run_art1(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     ari_test = adjusted_rand_score(y_test, y_pred)
     ami_test = adjusted_mutual_info_score(y_test, y_pred)
 
-    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
+    mem_bits = 32 * artmap_weight_size(cls.W) + \
                np.ceil(np.log2(np.max(y)+1)) * len(cls.map)
 
     return {
@@ -679,7 +679,7 @@ def run_art1(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
         "ami_test": float(ami_test),
         "train_time_s": float(t1 - t0),
         "pred_time_s": float(p1 - p0),
-        "n_clusters": int(cls.module_a.n_clusters),
+        "n_clusters": int(cls.n_clusters),
         "memory_bits": float(mem_bits),
         "variant": "binary",
         "n_train": int(len(y_train)),
