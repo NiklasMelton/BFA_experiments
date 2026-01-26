@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=ARTMAP_exp
+#SBATCH --job-name=ART_exp
 #SBATCH --partition=general
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
