@@ -117,7 +117,8 @@ def plot_ari_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
       marker = rho
       points only (no connecting lines).
     """
-    required = {"dataset", "model", "variant", "rho", "n_bits", "ari_test_mean",
+    required = {"dataset", "model", "variant", "rho", "n_bits", "ari_train_mean",
+                "ami_train_mean",
                 "memory_bits_mean"}
     missing = required - set(df.columns)
     if missing:
@@ -153,7 +154,7 @@ def plot_ari_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
                 continue
 
             x = g["memory_bits_mean"].to_numpy()
-            y = g["ari_test_mean"].to_numpy()
+            y = g["ari_train_mean"].to_numpy()
 
             # avoid issues with log scale if zeros slip in
             mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
@@ -192,7 +193,7 @@ def plot_ari_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
 
         ax.set_title(f"{dataset_title} | n_bits={bits_value}")
         ax.set_xlabel("Memory Bits")
-        ax.set_ylabel("ARI (test)")
+        ax.set_ylabel("ARI (train)")
         ax.set_xscale("log")
         ax.set_ylim([0, 1])
         ax.grid(True, alpha=0.3)
@@ -241,7 +242,140 @@ def plot_ari_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
     return fig, axes
 
 
+def plot_ami_vs_memory_bits(df, n_bits_left=1, n_bits_right=16):
+    """
+    2x4 grid (4 datasets):
+      - Columns 0-1: dataset panels for n_bits = n_bits_left
+      - Columns 2-3: dataset panels for n_bits = n_bits_right
+    Within each panel:
+      x = memory_bits_mean, y = accuracy_mean
+      color = (model, variant) pair
+      marker = rho
+      points only (no connecting lines).
+    """
+    required = {"dataset", "model", "variant", "rho", "n_bits", "ari_train_mean",
+                "ami_train_mean",
+                "memory_bits_mean"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"df is missing required columns: {sorted(missing)}")
 
+    # pick up to 4 datasets
+    datasets = list(pd.unique(df["dataset"]))[:4]
+
+    # aesthetics mappings computed once from full df (stable across panels)
+    mv_pairs = df[["model", "variant"]].drop_duplicates().apply(tuple, axis=1).tolist()
+    mv_pairs = sorted(mv_pairs)
+
+    mv_to_color = {mv: okabe_ito[i % len(okabe_ito)] for i, mv in enumerate(mv_pairs)}
+
+    rhos = sorted(pd.unique(df["rho"]))
+    marker_cycle = ["o", "s", "^", "D", "v", "P", "X", "*", "<", ">", "h", "H", "p", "8"]
+    rho_to_marker = {rho: marker_cycle[i % len(marker_cycle)] for i, rho in enumerate(rhos)}
+
+    # layout: 2 rows x 4 cols
+    fig, axes = plt.subplots(2, 4, figsize=(22, 9), sharex=False, sharey=False)
+
+    positions = [
+        (0, 0, 0), (0, 1, 1),
+        (1, 0, 2), (1, 1, 3),
+    ]  # (row, col_left_base, dataset_index)
+
+    handles_for_legend = {}
+
+    def _plot_panel(ax, dsub_bits, dataset, bits_value):
+        # points only; group only for labeling/consistent mapping
+        for (model, variant, rho), g in dsub_bits.groupby(["model", "variant", "rho"], dropna=False):
+            if g.empty:
+                continue
+
+            x = g["memory_bits_mean"].to_numpy()
+            y = g["ami_train_mean"].to_numpy()
+
+            # avoid issues with log scale if zeros slip in
+            mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
+            if not np.any(mask):
+                continue
+
+            color = mv_to_color[(model, variant)]
+
+            model_clean = model.replace("_binary", "").replace("_continuous", "")
+            variant_clean = variant.replace("(loss=log_loss)", "")
+            label = f"{model_clean} | {variant_clean}"
+            if "ART" in model_clean:
+                label += f" | rho={rho}"
+                marker = rho_to_marker[rho]
+            else:
+                marker = "X"
+
+            sc = ax.scatter(
+                x[mask],
+                y[mask],
+                color=color,
+                marker=marker,
+                s=45 if "Binary" not in model_clean else 90,
+                alpha=0.9,
+                label=label,
+            )
+            handles_for_legend.setdefault(label, sc)
+
+        title_map = {
+            "mnist": "MNIST",
+            "uci_har": "HAR",
+            "pendigits": "Pendigits",
+            "Spambase": "Spambase",
+        }
+        dataset_title = title_map.get(str(dataset), str(dataset))
+
+        ax.set_title(f"{dataset_title} | n_bits={bits_value}")
+        ax.set_xlabel("Memory Bits")
+        ax.set_ylabel("AMI (train)")
+        ax.set_xscale("log")
+        ax.set_ylim([0, 1])
+        ax.grid(True, alpha=0.3)
+
+        # set xlim based on data in this panel (robust)
+        xs = dsub_bits["memory_bits_mean"].to_numpy()
+        xs = xs[np.isfinite(xs) & (xs > 0)]
+        if xs.size:
+            lo, hi = np.min(xs), np.max(xs)
+            # ax.set_xlim([lo / 1.2, hi * 1.2])
+
+    # plot each dataset in left/right panels
+    for row, col_left, di in positions:
+        if di >= len(datasets):
+            axes[row, col_left].axis("off")
+            axes[row, col_left + 2].axis("off")
+            continue
+
+        dataset = datasets[di]
+        dsub = df[df["dataset"] == dataset].copy()
+
+        left = dsub[(dsub["n_bits"] == n_bits_left) | (dsub["n_bits"] == 0)]
+        right = dsub[(dsub["n_bits"] == n_bits_right) | (dsub["n_bits"] == 0)]
+
+        _plot_panel(axes[row, col_left], left, dataset, n_bits_left)
+        _plot_panel(axes[row, col_left + 2], right, dataset, n_bits_right)
+
+    # hide any unused panels if < 4 datasets
+    for r in range(2):
+        for c in range(4):
+            if not axes[r, c].has_data():
+                axes[r, c].axis("off")
+
+    # legend + layout (keep legend inside canvas)
+    fig.subplots_adjust(bottom=0.2)
+    fig.legend(
+        handles_for_legend.values(),
+        handles_for_legend.keys(),
+        loc="lower center",
+        ncol=3,
+        bbox_to_anchor=(0.5, 0.0),
+        frameon=True,
+    )
+
+    fig.tight_layout(rect=[0, 0.15, 1, 1])
+    return fig, axes
 
 def plot_fit_time_vs_predict_time(df, n_bits_left=1, n_bits_right=16):
     """
@@ -371,10 +505,13 @@ def plot_fit_time_vs_predict_time(df, n_bits_left=1, n_bits_right=16):
 
 if __name__ == "__main__":
     df = load_and_aggregate_data()
-    filt = df[(df["rho"] <= 0.1) | (df["rho"] > 0.8)]
+    filt = df[(df["rho"] == 0.5) | (df["rho"] == 0.75)]
 
     fig, axes = plot_ari_vs_memory_bits(filt, n_bits_left=1, n_bits_right=16)
-    fig.savefig("art_accuracy_vs_mem_bits.png")
+    fig.savefig("art_ari_vs_mem_bits.png")
+
+    fig, axes = plot_ami_vs_memory_bits(filt, n_bits_left=1, n_bits_right=16)
+    fig.savefig("art_ami_vs_mem_bits.png")
 
     fig, axes = plot_fit_time_vs_predict_time(filt, n_bits_left=1, n_bits_right=16)
     fig.savefig("art_fit_vs_pred_time.png")
