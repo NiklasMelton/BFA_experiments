@@ -1,13 +1,2 @@
-dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,status,error,traceback
-pendigits,UCI_81_PenDigits,BinaryFuzzyART,4,10992,16,10,4,0.75,ucimlrepo,81,10992,16,10,error,RuntimeError('weights[i] must have bool or integer dtype.'),"Traceback (most recent call last):
-  File ""/home/nmmz76/BFA_Experiments/BFA_experiments/art_tests_parallel.py"", line 188, in run_one_trial
-    out = test.fn(X, y, **kwargs)
-          ^^^^^^^^^^^^^^^^^^^^^^^
-  File ""/home/nmmz76/BFA_Experiments/BFA_experiments/experiment_utils.py"", line 619, in run_binaryfuzzyart
-    y_pred = cls.predict(X_test)
-             ^^^^^^^^^^^^^^^^^^^
-  File ""/home/nmmz76/BFA_Experiments/.venv/lib/python3.12/site-packages/artlib/optimized/backends/cpp/BinaryFuzzyART.py"", line 182, in predict
-    y_a = PredictBinaryFuzzyART(
-          ^^^^^^^^^^^^^^^^^^^^^^
-RuntimeError: weights[i] must have bool or integer dtype.
-"
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,ari_train,ami_train,ari_test,ami_test,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+pendigits,UCI_81_PenDigits,BinaryFuzzyART,4,10992,16,10,4,0.75,ucimlrepo,81,10992,16,10,0.18155597091656978,0.5728809601640851,0.223378647095007,0.5843212936853268,0.014796584146097302,0.07683023600839078,213,96.0,binary,5496,5496,ok,,

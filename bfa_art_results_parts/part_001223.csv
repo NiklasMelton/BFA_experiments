@@ -1,12 +1,2 @@
-dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,status,error,traceback
-mnist,MNIST,ART1,3,70000,784,10,1,0.5,MNIST,70000,784,10,error,"AttributeError(""'ART1' object has no attribute 'module_a'"")","Traceback (most recent call last):
-  File ""/home/nmmz76/BFA_Experiments/BFA_experiments/art_tests_parallel.py"", line 188, in run_one_trial
-    out = test.fn(X, y, **kwargs)
-          ^^^^^^^^^^^^^^^^^^^^^^^
-  File ""/home/nmmz76/BFA_Experiments/BFA_experiments/experiment_utils.py"", line 672, in run_art1
-    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-                                       ^^^^^^^^^^^^
-  File ""/home/nmmz76/BFA_Experiments/.venv/lib/python3.12/site-packages/artlib/common/BaseART.py"", line 41, in __getattr__
-    raise AttributeError(
-AttributeError: 'ART1' object has no attribute 'module_a'. Did you mean: '__module__'?
-"
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_n_samples,ds_n_features,ds_n_classes,ari_train,ami_train,ari_test,ami_test,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+mnist,MNIST,ART1,3,70000,784,10,1,0.5,MNIST,70000,784,10,3.2231957642076154e-07,8.409121951160474e-05,0.05573957392051861,0.10126211224567354,3182.3657202660106,2643.103682899149,34991,3511416832.0,binary,35000,35000,ok,,

@@ -1,12 +1,2 @@
-dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,status,error,traceback
-pendigits,UCI_81_PenDigits,FuzzyART_continuous,3,10992,16,10,0,0.9,ucimlrepo,81,10992,16,10,error,"AttributeError(""'FuzzyART' object has no attribute 'module_a'"")","Traceback (most recent call last):
-  File ""/home/nmmz76/BFA_Experiments/BFA_experiments/art_tests_parallel.py"", line 188, in run_one_trial
-    out = test.fn(X, y, **kwargs)
-          ^^^^^^^^^^^^^^^^^^^^^^^
-  File ""/home/nmmz76/BFA_Experiments/BFA_experiments/experiment_utils.py"", line 584, in run_fuzzyart_continuous
-    mem_bits = 32 * artmap_weight_size(cls.module_a.W) + \
-                                       ^^^^^^^^^^^^
-  File ""/home/nmmz76/BFA_Experiments/.venv/lib/python3.12/site-packages/artlib/common/BaseART.py"", line 41, in __getattr__
-    raise AttributeError(
-AttributeError: 'FuzzyART' object has no attribute 'module_a'. Did you mean: '__module__'?
-"
+dataset,dataset_spec,model,random_state,n_samples,n_features,n_classes,n_bits,rho,ds_source,ds_uci_id,ds_n_samples,ds_n_features,ds_n_classes,ari_train,ami_train,ari_test,ami_test,train_time_s,pred_time_s,n_clusters,memory_bits,variant,n_train,n_test,status,error,traceback
+pendigits,UCI_81_PenDigits,FuzzyART_continuous,3,10992,16,10,0,0.9,ucimlrepo,81,10992,16,10,0.0077297848957362065,0.27189067320077903,0.014034428196780198,0.33352968964891766,0.7108836648985744,0.421944152796641,1924,1970176.0,continuous,5496,5496,ok,,
