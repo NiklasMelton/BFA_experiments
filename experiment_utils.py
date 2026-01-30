@@ -797,6 +797,76 @@ def run_binaryfuzzyartmap(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
     }
 
 
+
+def cl_run_binaryfuzzyartmap(
+    X: np.ndarray,
+    y: np.ndarray,
+    rho: float,
+    n_bits: int,
+    random_state: int,
+    batch_size: int = 1000,
+    **kwargs
+) -> Dict[str, Any]:
+    cls = BinaryFuzzyARTMAP(rho=rho)
+
+    # Preprocess (same as before)
+    X_bin = binarize_features_thermometer(X, n_bits)
+    X_prep = cls.prepare_data(X_bin)
+    del X_bin
+
+    X_train, X_test, y_train, y_test = split_data(X_prep, y, random_state=random_state)
+    del X_prep
+
+    X_train = X_train.astype(np.uint8, copy=False)
+    X_test  = X_test.astype(np.uint8, copy=False)
+    y_train = np.asarray(y_train)
+    y_test  = np.asarray(y_test)
+
+    # Sort training data by class order (continual-learning stream)
+    sort_idx = np.argsort(y_train, kind="stable")
+    X_train = X_train[sort_idx]
+    y_train = y_train[sort_idx]
+
+    # Define class set (used for consistent C dimension + partial_fit "classes" on first call)
+    classes = np.unique(y)  # all dataset classes (train+test), per your requirement
+    n_classes = len(classes)
+
+    n_train = len(y_train)
+    n_batches = int(np.ceil(n_train / batch_size))
+
+    class_acc_by_batch = np.full((n_batches, n_classes), np.nan, dtype=np.float64)
+
+
+    # Incremental training
+    for b, start in enumerate(range(0, n_train, batch_size)):
+        end = min(start + batch_size, n_train)
+        Xb = X_train[start:end]
+        yb = y_train[start:end]
+
+        cls.partial_fit(Xb, yb)
+
+        y_pred = cls.predict(X_test)
+
+        # Per-class accuracy on the evaluation set, for *all* classes (even unseen so far)
+        for ci, c in enumerate(classes):
+            mask = (y_test == c)
+            if np.any(mask):
+                class_acc_by_batch[b, ci] = accuracy_score(y_test[mask], y_pred[mask])
+            else:
+                class_acc_by_batch[b, ci] = np.nan  # no eval samples for this class
+
+    return {
+        "class_acc_by_batch": class_acc_by_batch,   # shape (B, C)
+        "classes": classes,                         # aligns with columns of class_acc_by_batch
+        "batch_size": int(batch_size),
+        "n_batches": int(n_batches),
+        "n_clusters": int(cls.module_a.n_clusters),
+        "variant": "binary",
+        "n_train": int(n_train),
+        "n_test": int(len(y_test)),
+    }
+
+
 def run_art1map(X: np.ndarray, y: np.ndarray, rho: float, n_bits: int,
                 random_state: int, **kwargs) -> Dict[str, Any]:
     cls = ART1MAP(rho=rho, L=1.0)
