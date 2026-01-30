@@ -24,4 +24,4 @@ source /home/nmmz76/BFA_Experiments/.venv/bin/activate
 OFFSET=${OFFSET:-0}
 TASK_ID=$((OFFSET + SLURM_ARRAY_TASK_ID))
 
-python3 BFA_experiments/artmap_tests_parallel.py --task_id ${TASK_ID}
+python3 BFA_experiments/cl_tests_parallel.py --task_id ${TASK_ID}
